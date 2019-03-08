@@ -5,12 +5,12 @@ import yaml
 from aiohttp import web
 from aiohttp.hdrs import METH_ANY, METH_ALL
 from jinja2 import Environment, BaseLoader
+from inspect import isclass
 
 try:
     import ujson as json
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     import json
-
 
 SWAGGER_TEMPLATE = abspath(join(dirname(__file__), "..", "templates"))
 
@@ -36,11 +36,10 @@ def _extract_swagger_docs(end_point_doc, method="get"):
         }
     return {method: end_point_swagger_doc}
 
+
 def _build_doc_from_func_doc(route):
-
     out = {}
-
-    if issubclass(route.handler, web.View) and route.method == METH_ANY:
+    if isclass(route.handler) and issubclass(route.handler, web.View) and route.method == METH_ANY:
         method_names = {
             attr for attr in dir(route.handler) \
             if attr.upper() in METH_ALL
@@ -58,6 +57,7 @@ def _build_doc_from_func_doc(route):
             return {}
         out.update(_extract_swagger_docs(end_point_doc))
     return out
+
 
 def generate_doc_from_each_end_point(
         app: web.Application,
